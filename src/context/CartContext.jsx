@@ -1,24 +1,46 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
 import { getProductById } from "../data/products";
 
 const CartContext = createContext(null);
 
+const MAX_QUANTITY_PER_ITEM = 10;
+
 export default function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([]); // {id: 2, quantity: 7}
+  const [cartItems, setCartItems] = useState(() => {
+    const saved = localStorage.getItem("cart");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   function addToCart(productId) {
+    const product = getProductById(productId);
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
     const existing = cartItems.find((item) => item.id === productId);
+
     if (existing) {
-      const currentQuantity = existing.quantity;
-      const updatedCartItems = cartItems.map((item) =>
-        item.id === productId
-          ? { id: productId, quantity: currentQuantity + 1 }
-          : item
+      if (existing.quantity >= MAX_QUANTITY_PER_ITEM) {
+        return { success: false, error: `Maximum ${MAX_QUANTITY_PER_ITEM} items per product` };
+      }
+
+      setCartItems(
+        cartItems.map((item) =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
       );
-      setCartItems(updatedCartItems);
     } else {
       setCartItems([...cartItems, { id: productId, quantity: 1 }]);
     }
+
+    return { success: true };
   }
 
   function getCartItemsWithProducts() {
@@ -37,21 +59,27 @@ export default function CartProvider({ children }) {
   function updateQuantity(productId, quantity) {
     if (quantity <= 0) {
       removeFromCart(productId);
-      return;
+      return { success: true };
     }
+
+    if (quantity > MAX_QUANTITY_PER_ITEM) {
+      return { success: false, error: `Maximum ${MAX_QUANTITY_PER_ITEM} items per product` };
+    }
+
     setCartItems(
       cartItems.map((item) =>
         item.id === productId ? { ...item, quantity } : item
       )
     );
+
+    return { success: true };
   }
 
   function getCartTotal() {
-    const total = cartItems.reduce((total, item) => {
+    return cartItems.reduce((total, item) => {
       const product = getProductById(item.id);
       return total + (product ? product.price * item.quantity : 0);
     }, 0);
-    return total;
   }
 
   function clearCart() {
@@ -77,6 +105,10 @@ export default function CartProvider({ children }) {
 
 export function useCart() {
   const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("useCart must be used within CartProvider");
+  }
 
   return context;
 }
