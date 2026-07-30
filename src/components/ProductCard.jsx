@@ -1,52 +1,45 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 export default function ProductCard({ product }) {
   const { addToCart, cartItems } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
 
-  const quantity =
-    cartItems.find((item) => item.id === product.id)?.quantity ?? 0;
+  const productInCart = cartItems.find((item) => item.id === product.id);
+  const productQuantityLabel = productInCart && productInCart.quantity > 0
+    ? ` • ${productInCart.quantity} in cart`
+    : "";
+
+  function handleAddToCart() {
+    addToCart(product.id);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
+  }
 
   return (
     <div className="product-card">
-      <Link to={`/products/${product.id}`}>
-        <img
-          src={product.image}
-          alt={product.name}
-          className="product-card-image"
-          loading="lazy"
-        />
-      </Link>
-
+      <img
+        src={product.image}
+        alt={product.name}
+        className="product-card-image"
+        onError={(e) => {
+          e.target.src = "/placeholder-image.png";
+        }}
+      />
       <div className="product-card-content">
-        <h3 className="product-card-name">
-          {product.name}
-        </h3>
-
-        <p className="product-card-price">
-          ${product.price.toFixed(2)}
-        </p>
-
-        {quantity > 0 && (
-          <p className="product-card-cart-info">
-            In Cart: {quantity}
-          </p>
-        )}
-
+        <h3 className="product-card-name">{product.name}</h3>
+        <p className="product-card-price">${product.price.toFixed(2)}</p>
         <div className="product-card-actions">
-          <Link
-            to={`/products/${product.id}`}
-            className="btn btn-secondary"
-          >
+          <Link className="btn btn-secondary" to={`/products/${product.id}`}>
             View Details
           </Link>
-
           <button
-            className="btn btn-primary"
-            onClick={() => addToCart(product.id)}
+            className={`btn btn-primary ${justAdded ? "btn-success" : ""}`}
+            onClick={handleAddToCart}
+            disabled={justAdded}
           >
-            Add to Cart
-            {quantity > 0 && ` (${quantity})`}
+            {justAdded ? "✅ Added!" : `Add to Cart${productQuantityLabel}`}
           </button>
         </div>
       </div>

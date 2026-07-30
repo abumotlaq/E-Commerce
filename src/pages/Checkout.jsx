@@ -1,22 +1,106 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
+const TAX_RATE = 0.1;
+const FREE_SHIPPING_THRESHOLD = 50;
+const SHIPPING_COST = 10;
+
 export default function Checkout() {
-  const {
-    getCartItemsWithProducts,
-    updateQuantity,
-    removeFromCart,
-    getCartTotal,
-    clearCart,
-  } = useCart();
+  const navigate = useNavigate();
+  const { getCartItemsWithProducts, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart();
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [error, setError] = useState(null);
 
   const cartItems = getCartItemsWithProducts();
   const subtotal = getCartTotal();
-  const shipping = subtotal > 100 ? 0 : 10;
-  const total = subtotal + shipping;
+  const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+  const shipping = subtotal > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = subtotal + tax + shipping;
 
-  function placeOrder() {
-    alert("🎉 Your order has been placed successfully!");
-    clearCart();
+  function handleUpdateQuantity(productId, newQuantity) {
+    setError(null);
+
+    if (newQuantity < 1) {
+      if (window.confirm("Remove this item from cart?")) {
+        removeFromCart(productId);
+      }
+      return;
+    }
+
+    if (newQuantity > 10) {
+      setError("Maximum 10 items per product");
+      return;
+    }
+
+    const result = updateQuantity(productId, newQuantity);
+    if (!result.success) {
+      setError(result.error);
+    }
+  }
+
+  function handleRemoveFromCart(itemId) {
+    setError(null);
+    removeFromCart(itemId);
+  }
+
+  async function handlePlaceOrder() {
+    setError(null);
+
+    if (cartItems.length === 0) {
+      setError("Your cart is empty");
+      return;
+    }
+
+    if (total <= 0) {
+      setError("Invalid order total");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      const order = {
+        id: `ORD-${Date.now()}`,
+        items: cartItems,
+        subtotal,
+        tax,
+        shipping,
+        total,
+        date: new Date().toISOString(),
+      };
+
+      localStorage.setItem(`order_${order.id}`, JSON.stringify(order));
+
+      clearCart();
+      setOrderPlaced(true);
+
+      setTimeout(() => {
+        navigate(`/order-confirmation/${order.id}`);
+      }, 2000);
+    } catch (err) {
+      setError("Failed to place order. Please try again.");
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  if (orderPlaced) {
+    return (
+      <div className="page">
+        <div className="container">
+          <div className="success-message">
+            <h2>✅ Order Placed Successfully!</h2>
+            <p>Redirecting to confirmation page...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (cartItems.length === 0) {
@@ -24,10 +108,11 @@ export default function Checkout() {
       <div className="page">
         <div className="container">
           <h1 className="page-title">Checkout</h1>
-
-          <div className="empty-cart">
-            <h2>Your cart is empty</h2>
-            <p>Add some products before placing an order.</p>
+          <div className="empty-cart-message">
+            <p>Your cart is empty</p>
+            <Link to="/" className="btn btn-primary">
+              Continue Shopping
+            </Link>
           </div>
         </div>
       </div>
@@ -39,6 +124,12 @@ export default function Checkout() {
       <div className="container">
         <h1 className="page-title">Checkout</h1>
 
+        {error && (
+          <div className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+
         <div className="checkout-container">
           <div className="checkout-items">
             <h2 className="checkout-section-title">Order Summary</h2>
@@ -49,13 +140,13 @@ export default function Checkout() {
                   src={item.product.image}
                   alt={item.product.name}
                   className="checkout-item-image"
+                  onError={(e) => {
+                    e.target.src = "/placeholder-image.png";
+                  }}
                 />
 
                 <div className="checkout-item-details">
-                  <h3 className="checkout-item-name">
-                    {item.product.name}
-                  </h3>
-
+                  <h3 className="checkout-item-name">{item.product.name}</h3>
                   <p className="checkout-item-price">
                     ${item.product.price.toFixed(2)} each
                   </p>
@@ -65,24 +156,18 @@ export default function Checkout() {
                   <div className="quantity-controls">
                     <button
                       className="quantity-btn"
-                      onClick={() => {
-                        if (item.quantity > 1) {
-                          updateQuantity(item.id, item.quantity - 1);
-                        }
-                      }}
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                      disabled={isProcessing}
+                      aria-label="Decrease quantity"
                     >
-                      -
+                      −
                     </button>
-
-                    <span className="quantity-value">
-                      {item.quantity}
-                    </span>
-
+                    <span className="quantity-value">{item.quantity}</span>
                     <button
                       className="quantity-btn"
-                      onClick={() =>
-                        updateQuantity(item.id, item.quantity + 1)
-                      }
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                      disabled={item.quantity >= 10 || isProcessing}
+                      aria-label="Increase quantity"
                     >
                       +
                     </button>
@@ -94,15 +179,8 @@ export default function Checkout() {
 
                   <button
                     className="btn btn-secondary btn-small"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Remove this item from your cart?"
-                        )
-                      ) {
-                        removeFromCart(item.id);
-                      }
-                    }}
+                    onClick={() => handleRemoveFromCart(item.id)}
+                    disabled={isProcessing}
                   >
                     Remove
                   </button>
@@ -112,38 +190,46 @@ export default function Checkout() {
           </div>
 
           <div className="checkout-summary">
-            <h2 className="checkout-section-title">Order Summary</h2>
-
-            <p className="checkout-items-count">
-              {cartItems.length} item{cartItems.length > 1 ? "s" : ""}
-            </p>
+            <h2 className="checkout-section-title">Order Total</h2>
 
             <div className="checkout-total">
               <p className="checkout-total-label">Subtotal:</p>
-              <p className="checkout-total-value">
-                ${subtotal.toFixed(2)}
-              </p>
+              <p className="checkout-total-value">${subtotal.toFixed(2)}</p>
+            </div>
+
+            <div className="checkout-total">
+              <p className="checkout-total-label">Tax (10%):</p>
+              <p className="checkout-total-value">${tax.toFixed(2)}</p>
             </div>
 
             <div className="checkout-total">
               <p className="checkout-total-label">Shipping:</p>
               <p className="checkout-total-value">
-                {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                {shipping === 0 ? (
+                  <span className="free-shipping">FREE</span>
+                ) : (
+                  `$${shipping.toFixed(2)}`
+                )}
               </p>
             </div>
 
-            <div className="checkout-total">
+            <div className="checkout-total-final">
               <p className="checkout-total-label">Total:</p>
-              <p className="checkout-total-value checkout-total-final">
-                ${total.toFixed(2)}
-              </p>
+              <p className="checkout-total-value">${total.toFixed(2)}</p>
             </div>
+
+            {subtotal < FREE_SHIPPING_THRESHOLD && (
+              <p className="shipping-info">
+                💡 Free shipping on orders over ${FREE_SHIPPING_THRESHOLD}
+              </p>
+            )}
 
             <button
               className="btn btn-primary btn-large btn-block"
-              onClick={placeOrder}
+              onClick={handlePlaceOrder}
+              disabled={isProcessing || cartItems.length === 0}
             >
-              Place Order
+              {isProcessing ? "Processing..." : "Place Order"}
             </button>
           </div>
         </div>
