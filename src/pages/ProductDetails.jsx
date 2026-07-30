@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { getProductById, getRelatedProducts } from "../data/products";
+import { getProductById } from "../data/products";
 import { useCart } from "../context/CartContext";
 import ProductCard from "../components/ProductCard";
 
