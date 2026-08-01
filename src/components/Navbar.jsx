@@ -24,7 +24,7 @@ export default function Navbar() {
 
         <div className="navbar-menu">
           <Link to="/" className="navbar-link">
-            Home
+            🏠 Home
           </Link>
 
           <Link to="/checkout" className="navbar-link navbar-cart">

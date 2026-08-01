@@ -78,7 +78,7 @@ export default function ProductDetails() {
 
   const quantity = cartItems.find((item) => item.id === product.id)?.quantity ?? 0;
   const isOutOfStock = !product.inStock || product.stock === 0;
-  const relatedProducts = getRelatedProducts(product.id, 4);
+  const relatedProducts = product ? getRelatedProducts(product.id, 4) : [];
 
   return (
     <div className="page">
