@@ -3,9 +3,14 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+interface AuthFormValues {
+  email: string;
+  password: string;
+}
+
 export default function Auth() {
-  const [mode, setMode] = useState("signup");
-  const [error, setError] = useState(null);
+  const [mode, setMode] = useState<"signup" | "login">("signup");
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -15,9 +20,9 @@ export default function Auth() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<AuthFormValues>();
 
-  function onSubmit(data) {
+  function onSubmit(data: AuthFormValues) {
     setError(null);
     let result;
     if (mode === "signup") {
