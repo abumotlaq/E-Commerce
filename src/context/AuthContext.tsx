@@ -1,15 +1,7 @@
-import { createContext, useState, useContext } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
-import type { User, StoredUser, AuthResult } from "../types";
-
-interface AuthContextValue {
-  user: User | null;
-  signUp: (email: string, password: string) => AuthResult;
-  login: (email: string, password: string) => AuthResult;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from "./useAuth";
+import type { AuthResult, StoredUser, User } from "../types";
 
 function isStoredUser(value: unknown): value is StoredUser {
   return (
@@ -32,10 +24,10 @@ function readUsers(): StoredUser[] {
 }
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
-  const savedEmail = localStorage.getItem("currentUserEmail");
-  const [user, setUser] = useState<User | null>(
-    savedEmail ? { email: savedEmail } : null
-  );
+  const [user, setUser] = useState<User | null>(() => {
+    const savedEmail = localStorage.getItem("currentUserEmail");
+    return savedEmail ? { email: savedEmail } : null;
+  });
 
   function signUp(email: string, password: string): AuthResult {
     const users = readUsers();
@@ -55,11 +47,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   function login(email: string, password: string): AuthResult {
     const users = readUsers();
-    const user = users.find(
+    const matchingUser = users.find(
       (u) => u.email === email && u.password === password
     );
 
-    if (!user) {
+    if (!matchingUser) {
       return { success: false, error: "Invalid email or password" };
     }
 
@@ -79,14 +71,4 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (context === null) {
-    throw new Error("useAuth must be used inside an AuthProvider");
-  }
-
-  return context;
 }

@@ -1,28 +1,15 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { getProductById } from "../data/products";
-import { useCart } from "../context/CartContext";
-import type { Product } from "../types";
+import { useCart } from "../context/useCart";
+import { formatPrice } from "../utils/formatPrice";
 
 export default function ProductDetails() {
   const { id } = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
-  const navigate = useNavigate();
+  const product = id ? getProductById(id) : undefined;
   const { addToCart, cartItems } = useCart();
 
-  useEffect(() => {
-    const foundProduct = id ? getProductById(id) : undefined;
-
-    if (!foundProduct) {
-      navigate("/");
-      return;
-    }
-
-    setProduct(foundProduct);
-  }, [id]);
-
   if (!product) {
-    return <h1>Loading...</h1>;
+    return <Navigate to="/" />;
   }
 
   const productInCart = cartItems.find((item) => item.id === product.id);
@@ -40,7 +27,7 @@ export default function ProductDetails() {
           </div>
           <div className="product-detail-content">
             <h1 className="product-detail-name">{product.name}</h1>
-            <p className="product-detail-price">${product.price}</p>
+            <p className="product-detail-price">{formatPrice(product.price)}</p>
             <p className="product-detail-description">{product.description}</p>
             <button
               className="btn btn-primary"

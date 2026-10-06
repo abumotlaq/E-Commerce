@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../context/useCart";
+import { formatPrice } from "../utils/formatPrice";
 import type { Product } from "../types";
 
 interface ProductCardProps {
@@ -29,12 +30,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         alt={product.name}
         className="product-card-image"
         onError={(e) => {
-           e.currentTarget.src = "/placeholder-image.png";
-}}
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = "/placeholder-image.svg";
+        }}
       />
       <div className="product-card-content">
         <h3 className="product-card-name">{product.name}</h3>
-        <p className="product-card-price">${product.price.toFixed(2)}</p>
+        <p className="product-card-price">{formatPrice(product.price)}</p>
         <div className="product-card-actions">
           <Link className="btn btn-secondary" to={`/products/${product.id}`}>
             View Details

@@ -1,4 +1,5 @@
-import { useCart } from "../context/CartContext";
+import { useCart } from "../context/useCart";
+import { formatPrice } from "../utils/formatPrice";
 
 export default function Checkout() {
   const {
@@ -13,6 +14,10 @@ export default function Checkout() {
   const total = getCartTotal();
 
   function placeOrder() {
+    if (cartItems.length === 0) {
+      return;
+    }
+
     alert("Successful Order!");
     clearCart();
   }
@@ -33,7 +38,7 @@ export default function Checkout() {
                 <div className="checkout-item-details">
                   <h3 className="checkout-item-name">{item.product.name}</h3>
                   <p className="checkout-item-price">
-                    ${item.product.price} each
+                    {formatPrice(item.product.price)} each
                   </p>
                 </div>
                 <div className="checkout-item-controls">
@@ -54,7 +59,7 @@ export default function Checkout() {
                   </div>
 
                   <p className="checkout-item-total">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    {formatPrice(item.product.price * item.quantity)}
                   </p>
                   <button
                     className="btn btn-secondary btn-small"
@@ -71,17 +76,18 @@ export default function Checkout() {
             <h2 className="checkout-section-title">Total</h2>
             <div className="checkout-total">
               <p className="checkout-total-label">Subtotal:</p>
-              <p className="checkout-total-value">${total.toFixed(2)}</p>
+              <p className="checkout-total-value">{formatPrice(total)}</p>
             </div>
             <div className="checkout-total">
               <p className="checkout-total-label">Total:</p>
               <p className="checkout-total-value checkout-total-final">
-                ${total.toFixed(2)}
+                {formatPrice(total)}
               </p>
             </div>
             <button
               className="btn btn-primary btn-large btn-block"
               onClick={placeOrder}
+              disabled={cartItems.length === 0}
             >
               Place Order
             </button>

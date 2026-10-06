@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect width="500" height="500" fill="#f1f3f5" />
+  <path
+    d="M105 340l95-105 65 70 45-50 85 85H105z"
+    fill="#ced4da"
+  />
+  <circle cx="330" cy="170" r="28" fill="#ced4da" />
+  <text
+    x="250"
+    y="395"
+    fill="#6c757d"
+    font-family="sans-serif"
+    font-size="22"
+    text-anchor="middle"
+  >
+    Image unavailable
+  </text>
+</svg>

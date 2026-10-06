@@ -268,9 +268,14 @@ body {
 }
 
 .auth-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
   color: #007bff;
   text-decoration: none;
   font-weight: 500;
+  cursor: pointer;
 }
 
 .auth-link:hover {

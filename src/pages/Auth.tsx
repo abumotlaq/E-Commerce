@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { useNavigate } from "react-router-dom";
 
 interface AuthFormValues {
@@ -72,10 +72,6 @@ export default function Auth() {
                     value: 6,
                     message: "Password must be at least 6 characters",
                   },
-                  maxLength: {
-                    value: 12,
-                    message: "Password must be less than 12 characters",
-                  },
                 })}
                 className="form-input"
                 type="password"
@@ -95,17 +91,25 @@ export default function Auth() {
             {mode === "signup" ? (
               <p>
                 Already have an account?{" "}
-                <span className="auth-link" onClick={() => setMode("login")}>
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => setMode("login")}
+                >
                   Login
-                </span>
+                </button>
               </p>
             ) : (
               <p>
                 {" "}
                 Don't have an account?{" "}
-                <span className="auth-link" onClick={() => setMode("signup")}>
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => setMode("signup")}
+                >
                   Sign Up
-                </span>
+                </button>
               </p>
             )}
           </div>
