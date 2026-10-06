@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../data/products";
 import { useCart } from "../context/CartContext";
+import type { Product } from "../types";
 
 export default function ProductDetails() {
   const { id } = useParams();
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
   const { addToCart, cartItems } = useCart();
 
   useEffect(() => {
-    const foundProduct = getProductById(id);
+    const foundProduct = id ? getProductById(id) : undefined;
 
     if (!foundProduct) {
       navigate("/");
