@@ -1,4 +1,6 @@
-const products = [
+import type { Product } from "../types";
+
+const products: Product[] = [
   {
     id: 1,
     name: "Wireless Headphones",
@@ -77,23 +79,6 @@ export function getProducts() {
   return products;
 }
 
-export function getProductById(id) {
-  return products.find((product) => product.id === Number(id));
-}
-
-export function getRelatedProducts(productId, limit = 3) {
-  const currentProduct = getProductById(productId);
-
-  if (!currentProduct) {
-    return [];
-  }
-
-  return products
-    .filter((product) => product.id !== currentProduct.id)
-    .sort(
-      (a, b) =>
-        Math.abs(a.price - currentProduct.price) -
-        Math.abs(b.price - currentProduct.price)
-    )
-    .slice(0, limit);
+export function getProductById(id: string | number) {
+  return products.find((p) => p.id === Number(id));
 }
