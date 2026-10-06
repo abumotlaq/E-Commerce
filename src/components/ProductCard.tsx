@@ -1,9 +1,13 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import type { Product } from "../types";
 
-export default function ProductCard({ product }) {
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cartItems } = useCart();
   const [justAdded, setJustAdded] = useState(false);
 
@@ -25,8 +29,8 @@ export default function ProductCard({ product }) {
         alt={product.name}
         className="product-card-image"
         onError={(e) => {
-          e.target.src = "/placeholder-image.png";
-        }}
+           e.currentTarget.src = "/placeholder-image.png";
+}}
       />
       <div className="product-card-content">
         <h3 className="product-card-name">{product.name}</h3>
