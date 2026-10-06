@@ -9,7 +9,6 @@
     "types": ["vite/client"],
 
     "strict": true,
-    "allowJs": true,
 
     "noEmit": true,
     "isolatedModules": true,
